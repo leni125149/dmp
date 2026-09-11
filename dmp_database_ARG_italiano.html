@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D.M.P. // Archivio Centrale</title>
+<style>
+:root{--bg:#050807;--panel:#0a0f0e;--line:#24312e;--text:#b9c8c3;--dim:#60706b;--accent:#9bbcaf;--warn:#c7a66b;--red:#a85d5d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#17231f 0,#050807 58%);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:100vh}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 4px)}
+button,input{font:inherit}.hidden{display:none!important}.wrap{max-width:1180px;margin:auto;padding:24px 14px}
+.login{max-width:520px;margin:12vh auto;border:1px solid var(--line);background:#080c0b;padding:28px;box-shadow:0 0 50px #000}
+.brand{color:var(--accent);letter-spacing:4px;font-weight:700}.sub{color:var(--dim);margin:5px 0 25px}.field{margin:14px 0}.field label{display:block;color:var(--dim);font-size:11px;margin-bottom:5px}.field input{width:100%;background:#050807;border:1px solid var(--line);color:var(--text);padding:11px;outline:none}.field input:focus{border-color:var(--accent)}
+.btn{background:#0b1210;border:1px solid var(--line);color:var(--text);padding:9px 11px;cursor:pointer;text-align:left}.btn:hover,.btn.active{border-color:var(--accent);color:var(--accent)}
+.top{border:1px solid var(--line);background:#080c0b;padding:14px 16px;display:flex;justify-content:space-between;gap:15px}.status{color:var(--warn)}.grid{display:grid;grid-template-columns:235px 1fr;gap:14px;margin-top:14px}.side{border:1px solid var(--line);background:#080c0b;padding:10px;display:flex;flex-direction:column;gap:7px;height:max-content}.side small{color:var(--dim);padding:8px}.main{border:1px solid var(--line);background:#080c0b;min-height:650px;padding:20px}.title{font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:4px}.crumb{color:var(--dim);font-size:11px;margin-bottom:18px}.record{border:1px solid var(--line);background:#070a09;padding:15px;margin:12px 0}.record h3{margin:0 0 10px;color:#d0dbd7;font-size:14px}.tag{font-size:10px;border:1px solid var(--warn);color:var(--warn);padding:2px 5px;margin-left:7px}.tag.red{border-color:var(--red);color:var(--red)}pre{white-space:pre-wrap;color:#9eafa9;margin:0}.lock{color:var(--red)}.terminal{margin-top:18px;border:1px solid var(--line);padding:12px;background:#050706}.terminal input{width:100%;background:transparent;border:0;color:var(--accent);outline:none}.log{color:var(--dim);min-height:22px;margin-top:8px}.meter{height:5px;background:#151c1a;margin-top:6px}.meter i{display:block;height:100%;width:87%;background:var(--warn)}.hint{color:var(--dim);font-size:12px}.glitch{animation:flicker 2.8s infinite}@keyframes flicker{0%,92%,100%{opacity:1}93%{opacity:.45}94%{opacity:.9}}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.top{flex-direction:column}}
+</style>
+</head>
+<body>
+<div id="login" class="wrap">
+<div class="login">
+<div class="brand">D.M.P. // ARCHIVIO CENTRALE</div>
+<div class="sub">DIREZIONE DI MONITORAGGIO PARANORMALE — SISTEMA 4.17-Δ</div>
+<div class="field"><label>IDENTIFICATIVO</label><input id="user" autocomplete="off"></div>
+<div class="field"><label>CHIAVE DI ACCESSO</label><input id="pass" type="password"></div>
+<button class="btn" onclick="login()">AUTENTICA →</button>
+<p id="loginmsg" class="lock"></p>
+<p class="hint">Nota: tutti gli accessi vengono registrati.</p>
+</div>
+</div>
+
+<div id="app" class="wrap hidden">
+<div class="top">
+<div><div class="brand">D.M.P. // ARCHIVIO CENTRALE</div><div class="sub">SESSIONE AUTORIZZATA · UTENTE: UNKNOWN</div></div>
+<div><div id="clock">--:--:--</div><div class="status">INTEGRITÀ DATABASE: 87%</div></div>
+</div>
+<div class="grid">
+<nav class="side">
+<small>ARCHIVIO</small>
+<button class="btn active" onclick="show('home',this)">[00] PANORAMICA</button>
+<button class="btn" onclick="show('personnel',this)">[01] PERSONALE</button>
+<button class="btn" onclick="show('incidents',this)">[02] INCIDENTI</button>
+<button class="btn" onclick="show('research',this)">[03] RICERCA</button>
+<button class="btn" onclick="show('locations',this)">[04] LOCALITÀ</button>
+<button class="btn" onclick="show('comms',this)">[05] COMUNICAZIONI</button>
+<button class="btn" onclick="show('restricted',this)">[06] RISERVATI</button>
+<button class="btn" onclick="show('deleted',this)">[07] ELIMINATI</button>
+<small>SISTEMA</small>
+<button class="btn" onclick="logout()">DISCONNETTI</button>
+</nav>
+<main id="view" class="main"></main>
+</div>
+</div>
+
+<script>
+const V={
+home:`<div class="crumb">RADICE / PANORAMICA</div><div class="title">PANORAMICA SISTEMA</div>
+<div class="record"><h3>STATO ARCHIVIO</h3><pre>DATABASE: ONLINE
+NODI ATTIVI: 17
+RECORD TOTALI: 4.817
+RECORD ACCESSIBILI: 4.103
+RECORD BLOCCATI: 714
+INTEGRITÀ: 87%</pre><div class="meter"><i></i></div></div>
+<div class="record"><h3>AVVISO DI SISTEMA</h3><pre>È stata rilevata una discrepanza temporale nei record DMP-00417.
+
+DATA DEL SISTEMA: <span id="d1"></span>
+DATA DELL'ULTIMA MODIFICA: 09/09/2026
+
+La differenza non può essere spiegata dalla sincronizzazione.</pre></div>
+<div class="record"><h3>ACCESSO RAPIDO</h3><pre>Prova il terminale con:
+AIUTO
+ELENCA
+APRI 00417
+APRI 00000
+APRIRE RISERVATO</pre></div>${terminal()}`,
+
+personnel:`<div class="crumb">RADICE / PERSONALE</div><div class="title">REGISTRO DEL PERSONALE</div>
+<div class="record"><h3>#00871 — OPERATORE CAMPO <span class="tag">ATTIVO</span></h3><pre>NOME: █████████
+RUOLO: Operatore di contenimento
+ULTIMO ACCESSO: 08/09/2026 — 13:41
+ULTIMA POSIZIONE: SETTORE 04
+
+NOTA: il soggetto ha richiesto di essere rimosso
+dai registri. La richiesta è stata respinta.</pre></div>
+<div class="record"><h3>#00114 — RICERCATORE <span class="tag red">SCOMPARSO</span></h3><pre>NOME: █████████
+RUOLO: Ricerca temporale
+ULTIMO CONTATTO: 09/02/2019 — 10:01
+STATO: IRREPERIBILE
+
+ULTIMA FRASE REGISTRATA:
+"Non è il tempo ad andare avanti. Siamo noi."</pre></div>${terminal()}`,
+
+incidents:`<div class="crumb">RADICE / INCIDENTI</div><div class="title">ARCHIVIO INCIDENTI</div>
+<div class="record"><h3>DMP-00417 <span class="tag red">CRITICO</span></h3><pre>DATA: 09/02/2019
+LOCALITÀ: SETTORE 04
+TIPO: Anomalia temporale
+
+09:41 — Rilevazione iniziale
+09:43 — Comunicazioni interrotte
+09:47 — Evacuazione
+09:52 — █████████████████
+10:01 — Evento terminato
+
+VITTIME: 0
+
+[ERRORE]
+
+VITTIME: 17
+
+[ERRORE]
+
+VITTIME: 0
+
+NOTA: Nel settore non risultavano presenti 17 persone.</pre></div>
+<div class="record"><h3>DMP-00312</h3><pre>DESCRIZIONE: "Eco mnemonica"
+STATO: CHIUSO
+NOTA: Tutti i presenti ricordano un evento
+che, secondo gli archivi, non è mai avvenuto.</pre></div>${terminal()}`,
+
+research:`<div class="crumb">RADICE / RICERCA</div><div class="title">PROGETTI DI RICERCA</div>
+<div class="record"><h3>PROGETTO DELTA <span class="tag">RISERVATO</span></h3><pre>OBIETTIVO: determinare la natura dello stato pre-Delta.
+STATO: INCOMPLETO
+
+Ipotesi 01 — Il Delta è un fenomeno.
+Ipotesi 02 — Il Delta è una soglia.
+Ipotesi 03 — Il Delta ci ha già osservati.
+
+ULTIMA NOTA:
+"Il Big Bang non è l'inizio. È il punto in cui
+abbiamo smesso di ricordare cosa c'era prima."</pre></div>
+<div class="record"><h3>TEST 21</h3><pre>RISULTATO: █████████████████
+RISPOSTA COGNITIVA: PRESENTE
+MEMORIA RETENUTA: 73%
+
+NOTA DEL RICERCATORE:
+"Il soggetto ha ricordato qualcosa che non gli abbiamo mai detto."</pre></div>${terminal()}`,
+
+locations:`<div class="crumb">RADICE / LOCALITÀ</div><div class="title">LOCALITÀ MONITORATE</div>
+<div class="record"><h3>SETTORE 04 <span class="tag red">VIETATO</span></h3><pre>ACCESSO: NEGATO
+MOTIVO: Cedimento della continuità spaziale
+INGRESSI NOTI: 1
+USCITE NOTE: 0
+MAPPA: [CORROTTA]
+
+NOTA: La temperatura interna rimane a 21°C.
+Il settore è stato sigillato per 2.741 giorni.</pre></div>${terminal()}`,
+
+comms:`<div class="crumb">RADICE / COMUNICAZIONI</div><div class="title">COMUNICAZIONI RECUPERATE</div>
+<div class="record"><h3>TRASMISSIONE 09:52:14</h3><pre>[00:00:01] — Ricevete?
+[00:00:04] — Abbiamo trovato l'archivio.
+[00:00:09] — Contiene record che ci riguardano.
+[00:00:12] — Alcuni sono datati domani.
+[00:00:18] — Non aprire—
+[CORROTTO]</pre></div>
+<div class="record"><h3>TRASMISSIONE 10:01:00</h3><pre>MITTENTE: UNKNOWN
+DESTINATARIO: UNKNOWN
+CONTENUTO:
+"L'hai già aperto."</pre></div>${terminal()}`,
+
+restricted:`<div class="crumb">RADICE / RISERVATI</div><div class="title glitch">AREA RISERVATA</div>
+<div class="record"><h3>ACCESSO NEGATO <span class="tag red">LIVELLO 5</span></h3><pre>Questo archivio richiede un'autorizzazione superiore.
+
+Suggerimento:
+la chiave non è una parola.
+È una data.
+
+[████/██/████]</pre></div>
+<div class="record"><h3>FILE ∆-01</h3><pre>STATO: BLOCCATO
+DESCRIZIONE: █████████████████████
+
+Il sistema ha registrato 3 tentativi di accesso
+prima dell'apertura di questa pagina.</pre></div>${terminal()}`,
+
+deleted:`<div class="crumb">RADICE / ELIMINATI</div><div class="title glitch">RECUPERO FILE ELIMINATI</div>
+<div class="record"><h3>FILE 00000 <span class="tag red">RECUPERATO</span></h3><pre>CREAZIONE: 07/09/2026
+ELIMINAZIONE: 07/09/2026
+STATO: IMPOSSIBILE
+
+CONTENUTO:
+"Se stai leggendo questo, l'archivio ti ha raggiunto."
+
+CONTENUTO SECONDARIO:
+"La tua sessione è iniziata prima che effettuassi l'accesso."</pre></div>
+<div class="record"><h3>FILE ∆-NULL</h3><pre>DIMENSIONE: 0 BYTE
+DESCRIZIONE: █████████████████
+
+Prova: APRI 00000</pre></div>${terminal()}`
+};
+function terminal(){return `<div class="terminal"><div>&gt; <input id="cmd" autocomplete="off" placeholder="digita AIUTO..."></div><div id="log" class="log"></div></div>`}
+function bind(){let e=document.getElementById('cmd');if(e)e.addEventListener('keydown',x=>{if(x.key==='Enter')runCommand(e.value)});let d=document.getElementById('d1');if(d)d.textContent=new Date().toLocaleDateString('it-IT')}
+function show(k,b){document.getElementById('view').innerHTML=V[k];document.querySelectorAll('.btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');bind()}
+function login(){let u=document.getElementById('user').value.trim().toUpperCase(),p=document.getElementById('pass').value.trim().toUpperCase();if(u==='UNKNOWN'&&p==='DELTA'){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');show('home',document.querySelector('.btn.active'))}else document.getElementById('loginmsg').textContent='AUTENTICAZIONE FALLITA — ACCESSO REGISTRATO.'}
+function logout(){location.reload()}
+function runCommand(raw){let c=raw.trim().toUpperCase(),l=document.getElementById('log');if(!l)return;
+if(c==='AIUTO'||c==='HELP')l.textContent='COMANDI: AIUTO · ELENCA · APRI 00417 · APRI 00000 · APRIRE RISERVATO · STATO · PULISCI';
+else if(c==='ELENCA'||c==='LIST')l.textContent='PERSONALE / INCIDENTI / RICERCA / LOCALITÀ / COMUNICAZIONI / RISERVATI / ELIMINATI';
+else if(c==='STATO'||c==='STATUS')l.textContent='INTEGRITÀ 87% · SESSIONE ATTIVA · CONNESSIONE ESTERNA: NO';
+else if(c==='PULISCI'||c==='CLEAR')l.textContent='';
+else if(c==='APRI 00417'||c==='OPEN 00417'){show('incidents');l.textContent='INCIDENTE DMP-00417 CARICATO.'}
+else if(c==='APRI 00000'||c==='OPEN 00000'){show('deleted');l.textContent='FILE 00000 RECUPERATO.'}
+else if(c==='APRIRE RISERVATO'||c==='OPEN RESTRICTED'){show('restricted');l.textContent='ATTENZIONE: ACCESSO REGISTRATO.'}
+else if(c==='DELTA-090919'){l.textContent='CHIAVE ACCETTATA. NUOVO INDIZIO: 17-04-21.'}
+else l.textContent='COMANDO SCONOSCIUTO — QUERY REGISTRATA.'}
+setInterval(()=>{let e=document.getElementById('clock');if(e)e.textContent=new Date().toLocaleTimeString('it-IT')},1000);
+</script>
+</body>
+</html>
